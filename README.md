@@ -1,3 +1,5 @@
+To start:
+npm start dev ... nodemon will keep the app running.
 
 the cbo_id table is an index of cbo_ids to table
 
