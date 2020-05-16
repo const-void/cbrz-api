@@ -25,10 +25,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importStar(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const db_1 = require("./db");
+const cors_1 = __importDefault(require("cors"));
 const port = 3000;
 const db = db_1.CboDb.get();
 var app = express_1.default();
 var router = express_1.Router();
+//https://brianflove.com/2017-03-22/express-cors-typescript/
+//options for cors midddleware
+const options = {
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token"],
+    credentials: true,
+    methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+    origin: "http://localhost:4200",
+    preflightContinue: false
+};
+//use cors middleware
+router.use(cors_1.default(options));
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 //inspect should be part of a load process that caches tables into memory

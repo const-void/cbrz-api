@@ -2,11 +2,27 @@ import express, { NextFunction, Router, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import { CboDb } from './db';
 import { reverse } from 'dns';
+import cors, { CorsOptions } from "cors";
+
 
 const port = 3000;
 const db = CboDb.get();
 var app = express();
 var router = Router()
+
+//https://brianflove.com/2017-03-22/express-cors-typescript/
+//options for cors midddleware
+const options:CorsOptions = {
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token"],
+  credentials: true,
+  methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+  origin: "http://localhost:4200",
+  preflightContinue: false
+};
+
+//use cors middleware
+router.use(cors(options));
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));

@@ -11,7 +11,10 @@ todos:
     - return true if no err
     - return false if err, and do something common with err
 * common logging...how?
-
+* cbo_user.db -- user notes 
+ notes
+ --|--|--
+ name | note | cboid 
 
 when posting 
 # Further reading
