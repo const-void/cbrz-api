@@ -1,4 +1,5 @@
 import express, { NextFunction, Router, Request, Response } from 'express';
+import bodyParser from 'body-parser';
 import { CboDb } from './db';
 import { reverse } from 'dns';
 
@@ -6,6 +7,9 @@ const port = 3000;
 const db = CboDb.get();
 var app = express();
 var router = Router()
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
 
 
 //inspect should be part of a load process that caches tables into memory
@@ -72,30 +76,88 @@ router.get('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) =>
 
 //insert
 router.post('/crud/:table', (req:Request, res:Response, next:NextFunction) => {
-  var rv = { orig_params:req.params, id: 0 } ;
+  var rv = { orig_params:req.params, orig_body:req.body, id: 0 } ;
+  //todo - confirm there is no id in body
 
-  if (req.params.id==null) {
-    //https://www.sqlite.org/lang_transaction.html
-    //https://github.com/mapbox/node-sqlite3/wiki/Control-Flow
-    //
-    console.log('no / null id in json body--create')
-    db.db.run('INSERT INTO cbo_id (tbl) VALUES (?)',[req.params.table], function (this,err){
+  //https://www.sqlite.org/lang_transaction.html
+  //https://github.com/mapbox/node-sqlite3/wiki/Control-Flow
+  //
+  console.log('no / null id in json body--create')
+  //create an insert sql--interrogate body parameters
+  var col_names=Object.keys(req.body);
+  col_names.push('id');
+  var values=Array(col_names.length).fill('?').toString()
+  var cols=col_names.toString();
+  var vals=Object.values(req.body);
+  var insert_sql=`INSERT INTO ${req.params.table} (${cols}) VALUES (${values})`;
+  console.log(insert_sql);
+
+  db.db.run('INSERT INTO cbo_id (tbl) VALUES (?)',[req.params.table], function (this,err){
+    if (err) { console.log(err); res.json(err); }
+    vals.push(this.lastID);
+    rv.id=this.lastID;
+    console.log(`created cboid ${this.lastID}`);
+    db.db.run(insert_sql,vals,function(this,err){
       if (err) { console.log(err); res.json(err); }
+      res.json(rv);
+    });      
+  });
+});
 
-      db.db.serialize(()=>{
-        console.log(`inserted ${this.lastID}`);
-        rv.id=this.lastID;
+//update
+router.post('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) => {
+  var rv = { orig_params:req.params, orig_body:req.body, id: req.params.id } ;
+ 
+  var sql=`UPDATE ${req.params.table} SET `;
+  var first_flag=true;
+  for (let col_name of Object.keys(req.body)) {
+    if (first_flag) {
+      first_flag=false;
+    }
+    else {
+      sql+=",";
+    }
+    sql+=`${col_name}=?`
+  }
+  sql+=` WHERE id=?`
+  var vals=Object.values(req.body);
+  vals.push(req.params.id);
+ 
+  console.log(sql);
+
+  db.db.run(sql,vals, function (this,err){
+    if (err) { console.log(err); res.json(err); }
+    res.json(rv);    
+    
+  });
+});
+
+//delete - delete from source table first, then from cboid table nextr
+//todo - make this a transaction...somehow!!!
+router.delete('/crud/:id', (req:Request, res:Response, next:NextFunction) => {
+  var rv = { orig_params:req.params, orig_body:req.body, id: req.params.id } ;
+ 
+  var sql=`select tbl from cbo_id where id=${req.params.id}`;
+  console.log(`get cboid table --  ${sql}`);
+  db.db.get(sql,[],function (this,err,row){
+    if (err) { console.log(err); res.json(err); }
+    console.log(row);
+    var sql2=`delete from ${row.tbl} where id=${req.params.id}`;
+    console.log(sql2);
+    db.db.run(sql2,[],function (this,err){
+      if (err) { console.log(err); res.json(err); }
+      var sql3=`delete from cbo_id where id=${req.params.id}`;
+      console.log(sql3);
+      db.db.run(sql3,[], function(this,err){
+        if (err) { console.log(err); res.json(err); }
+        console.log('success!');
+        res.json(rv);
       });
     });
-    res.json(rv);
-  
-  }
-  else {
-    res.json(rv);
-    console.log(`update found--${req.params.id}`)
-  }
-  
+
+  });
 });
+
 
 //update
 router.post('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) => {
