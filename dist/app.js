@@ -142,6 +142,7 @@ router.post('/crud/:table', (req, res, next) => {
 //update
 router.post('/crud/:table/:id', (req, res, next) => {
     var rv = { orig_params: req.params, orig_body: req.body, id: req.params.id };
+    delete req.body.id;
     var sql = `UPDATE ${req.params.table} SET `;
     var first_flag = true;
     for (let col_name of Object.keys(req.body)) {
