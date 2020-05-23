@@ -1,5 +1,5 @@
 To start:
-npm start dev ... nodemon will keep the app running.
+npm run dev ... nodemon will keep the app running.
 
 the cbo_id table is an index of cbo_ids to table
 
@@ -20,3 +20,36 @@ when posting
 # Further reading
 https://developer.okta.com/blog/2018/11/15/node-express-typescript
 https://codebrains.io/setting-up-express-with-typescript/
+https://gist.github.com/erikvullings/c7eed546a4be0ba43532f8b83048ef38 -- dir walk
+
+# db notes
+
+a title is the precise title of a 
+
+cbo_person
+* associated cbo_id  is used to differeniate collisions
+
+cbo_comic_frequency
+    * monthly
+    * bi-weekly
+    * mini-series
+    * one-shot
+
+cbo_comic_type
+    * trade
+    * omnibus
+    * collection
+    * single issue
+    * graphic novel
+
+cbo_title
+    * Title of a comic
+
+cbo_series
+    * Collection of titles under a common character/subject (ie Incal, X-Men, etc)
+
+cbo_creator_roles
+* penciller
+* inker
+* colorist
+* letterist (i18n specific?)

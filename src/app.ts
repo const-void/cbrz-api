@@ -3,12 +3,12 @@ import bodyParser from 'body-parser';
 import { CboDb } from './db';
 import { reverse } from 'dns';
 import cors, { CorsOptions } from "cors";
-
+import { DirEntity }  from './fs';
 
 const port = 3000;
 const db = CboDb.get();
 var app = express();
-var router = Router()
+var router = Router();
 
 //https://brianflove.com/2017-03-22/express-cors-typescript/
 //options for cors midddleware
@@ -27,10 +27,18 @@ router.use(cors(options));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
+router.get('/files',(req:Request, res:Response, next:NextFunction)=>{
+  let d =new DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', (err,d)=>{
+    console.log('got file listing');
+    if (err) {throw err; }
+    //console.log(d);
+    res.json(d);
+  });
+
+});
 
 //inspect should be part of a load process that caches tables into memory
 //there should be a refresh command that rereshes the cache
-
 router.get('/inspect', (req:Request, res:Response, next:NextFunction) => {
   var sql="SELECT name FROM sqlite_master WHERE type='table' ORDER BY name";
   db.db.all(sql,[],(err,rows)=>{
@@ -124,7 +132,7 @@ router.post('/crud/:table', (req:Request, res:Response, next:NextFunction) => {
 router.post('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) => {
   var rv = { orig_params:req.params, orig_body:req.body, id: req.params.id } ;
   delete req.body.id;
-  
+   
   var sql=`UPDATE ${req.params.table} SET `;
   var first_flag=true;
   for (let col_name of Object.keys(req.body)) {

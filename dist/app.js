@@ -26,6 +26,7 @@ const express_1 = __importStar(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const db_1 = require("./db");
 const cors_1 = __importDefault(require("cors"));
+const fs_1 = require("./fs");
 const port = 3000;
 const db = db_1.CboDb.get();
 var app = express_1.default();
@@ -43,6 +44,16 @@ const options = {
 router.use(cors_1.default(options));
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
+router.get('/files', (req, res, next) => {
+    let d = new fs_1.DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', (err, d) => {
+        console.log('got file listing');
+        if (err) {
+            throw err;
+        }
+        //console.log(d);
+        res.json(d);
+    });
+});
 //inspect should be part of a load process that caches tables into memory
 //there should be a refresh command that rereshes the cache
 router.get('/inspect', (req, res, next) => {
