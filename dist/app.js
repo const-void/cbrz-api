@@ -45,7 +45,7 @@ router.use(cors_1.default(options));
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 router.get('/files', (req, res, next) => {
-    let d = new fs_1.DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', (err, d) => {
+    let d = new fs_1.DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', true, 1, (err, d) => {
         console.log('got file listing');
         if (err) {
             throw err;

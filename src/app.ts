@@ -28,7 +28,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
 router.get('/files',(req:Request, res:Response, next:NextFunction)=>{
-  let d =new DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', (err,d)=>{
+  let d =new DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', true, 1,(err,d)=>{
     console.log('got file listing');
     if (err) {throw err; }
     //console.log(d);

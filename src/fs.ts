@@ -5,34 +5,35 @@ import fs, { Dirent, readSync } from 'fs';
 
 // dir walk classes /////
 
-// generic storage entity class
-class StorageEntity {
-    ext?:string;
-    basename:string;
-    constructor(public fn:string, public isDir:boolean) {
-        if (isDir) {
-            this.basename=path.basename(fn);
-        }
-        else {
-            this.ext=path.extname(fn);
-            this.basename=path.basename(fn,this.ext);
-        }
-    }
-};
-
 //directory class does most of the  heavy lifting
-export class DirEntity extends StorageEntity {
-  itms:StorageEntity[]; 
+export class DirEntity {
+  icon:string;
+  ext:string;
+  basename:string;
+  parentFolder:string;
+  itms:DirEntity[]; 
   
-  constructor(fn:string, done: (err:Error|null, d?:DirEntity)=>void){
-    super(fn,true);
+  ///TODO - shift icons into configuration somehow
+  constructor(public fn:string, public isDir:boolean, public depth:number, done: (err:Error|null, d?:DirEntity)=>void){
     this.itms=[];
-    //this.path=fn;
-   
+    if (isDir) {
+      this.icon="folder";
+      this.ext="";
+      this.basename=path.basename(fn);
+      this.parentFolder="";
+      this.walkDir(done);
+    }
+    else {
+      this.icon="book";
+      this.ext=path.extname(fn);
+      this.basename=path.basename(fn,this.ext);
+      this.parentFolder=path.dirname(fn);
+      done(null,this);
+    }
+  }
 
-    //console.log(`process ${fn}`);
-
-    fs.readdir(fn, {withFileTypes:true}, (err:Error|null,files:fs.Dirent[]) => {
+  walkDir(done: (err:Error|null, d?:DirEntity)=>void) {
+      fs.readdir(this.fn, {withFileTypes:true}, (err:Error|null,files:fs.Dirent[]) => {
       if (err) { return done(err); }
 
       let pending=files.length;
@@ -42,7 +43,7 @@ export class DirEntity extends StorageEntity {
       }
       files.forEach((d:Dirent)=>{
         if (d.isDirectory()) {
-          new DirEntity(`${fn}/${d.name}`,(err:Error|null,newD?:DirEntity)=>{
+          new DirEntity(`${this.fn}/${d.name}`,true, this.depth+1, (err:Error|null,newD?:DirEntity)=>{
             if (err) {return done(err);}
             if (newD) { this.add(newD); }
             if (!--pending) {
@@ -52,28 +53,19 @@ export class DirEntity extends StorageEntity {
           });
         }
         else {
-          this.add(new FileEntity(`${fn}/${d.name}`));
-          if (!--pending) {
-            //console.log(`dir walk done ${fn} - ${this.itms.length} files - ${pending}`)
-            return(done(null,this))
-          }  
+          this.add(new DirEntity(`${this.fn}/${d.name}`,false,this.depth+1,(err:Error|null,newD?:DirEntity)=>{
+            if (!--pending) {
+              //console.log(`dir walk done ${fn} - ${this.itms.length} files - ${pending}`)
+              return(done(null,this))
+            }    
+          }));
         }    
       });
 
     });
   }
 
-  add(itm:StorageEntity) { 
+  add(itm:DirEntity) { 
     this.itms.push(itm);
   }
 };
-
-// file entity
-class FileEntity extends StorageEntity {
-  path:string;
-
-  constructor (fn:string) {
-    super(fn,false);
-    this.path=path.dirname(fn);
-  }
-}
