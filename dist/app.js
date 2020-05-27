@@ -45,14 +45,8 @@ router.use(cors_1.default(options));
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 router.get('/files', (req, res, next) => {
-    let d = new fs_1.DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', true, 1, (err, d) => {
-        console.log('got file listing');
-        if (err) {
-            throw err;
-        }
-        //console.log(d);
-        res.json(d);
-    });
+    let d = new fs_1.DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', true, 1, 1);
+    res.json(d);
 });
 //inspect should be part of a load process that caches tables into memory
 //there should be a refresh command that rereshes the cache
