@@ -111,7 +111,8 @@ router.post('/crud/:table', (req:Request, res:Response, next:NextFunction) => {
   var insert_sql=`INSERT INTO ${req.params.table} (${cols}) VALUES (${values})`;
   console.log(insert_sql);
 
-  db.db.run('INSERT INTO cbo_id (tbl) VALUES (?)',[req.params.table], function (this,err){
+  let ts=Date.now()
+  db.db.run('INSERT INTO cbo_id (tbl, created_ts, modified_ts) VALUES (?,?,?)',[req.params.table,ts,ts], function (this,err){
     if (err) { console.log(err); res.json(err); }
     vals.push(this.lastID);
     rv.id=this.lastID;
@@ -127,7 +128,7 @@ router.post('/crud/:table', (req:Request, res:Response, next:NextFunction) => {
 router.post('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) => {
   var rv = { orig_params:req.params, orig_body:req.body, id: req.params.id } ;
   delete req.body.id;
-   
+   //todo - make this a transaction!
   var sql=`UPDATE ${req.params.table} SET `;
   var first_flag=true;
   for (let col_name of Object.keys(req.body)) {
@@ -147,8 +148,13 @@ router.post('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) =
 
   db.db.run(sql,vals, function (this,err){
     if (err) { console.log(err); res.json(err); }
-    res.json(rv);    
-    
+ 
+    let cboid_sql="UPDATE cbo_id SET modified_ts=? where id=?";
+    let ts=Date.now();
+    db.db.run(cboid_sql,[ts,req.params.id],function (this,err) {
+      if (err) { console.log(err); res.json(err); }
+      res.json(rv);    
+    });   
   });
 });
 

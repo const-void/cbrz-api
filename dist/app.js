@@ -127,7 +127,8 @@ router.post('/crud/:table', (req, res, next) => {
     var vals = Object.values(req.body);
     var insert_sql = `INSERT INTO ${req.params.table} (${cols}) VALUES (${values})`;
     console.log(insert_sql);
-    db.db.run('INSERT INTO cbo_id (tbl) VALUES (?)', [req.params.table], function (err) {
+    let ts = Date.now();
+    db.db.run('INSERT INTO cbo_id (tbl, created_ts, modified_ts) VALUES (?,?,?)', [req.params.table, ts, ts], function (err) {
         if (err) {
             console.log(err);
             res.json(err);
@@ -168,7 +169,15 @@ router.post('/crud/:table/:id', (req, res, next) => {
             console.log(err);
             res.json(err);
         }
-        res.json(rv);
+        let cboid_sql = "UPDATE cbo_id SET modified_ts=? where id=?";
+        let ts = Date.now();
+        db.db.run(cboid_sql, [ts, req.params.id], function (err) {
+            if (err) {
+                console.log(err);
+                res.json(err);
+            }
+            res.json(rv);
+        });
     });
 });
 //delete - delete from source table first, then from cboid table nextr
