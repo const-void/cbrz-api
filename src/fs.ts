@@ -44,13 +44,14 @@ export class DirEntity {
           id++;
           if (d.isDirectory()) {
             this.add(new DirEntity(`${fn}/${d.name}`,true, depth+1, id));
-            this.walkDir(id,depth+1,`${fn}/${d.name}`);
+            id=this.walkDir(id,depth+1,`${fn}/${d.name}`);
           }
           else {
             this.add(new DirEntity(`${fn}/${d.name}`,false, depth+1, id));
           }    
         });
       }
+      return id;
   }
   
 
