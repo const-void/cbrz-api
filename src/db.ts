@@ -1,12 +1,13 @@
 import { Database } from 'sqlite3'
 
-const DB_FILENAME="cbodb_master.db"
+const CBODB_FN="cbodb_master.db"
+const FILE_RENAMER_FN="cbodb_file_renamer.db"
 
-class CboDb {
-    private static instance: CboDb;
+class Db {
+    protected static instance: Db;
     readonly db:Database; 
-
-    private constructor(private fn:string){
+    
+    protected constructor(private fn:string){
         this.db=new Database(fn, ( err )=>{
             if (err) {
                 console.log(err.message);
@@ -19,14 +20,23 @@ class CboDb {
              
     }
 
-    static get():CboDb {
-        if (!CboDb.instance) {
-            CboDb.instance=new CboDb(DB_FILENAME);
-        }
-
-        return CboDb.instance;
-    }
-
 }
 
-export { CboDb };
+export class CboDb extends Db {
+    static get():CboDb {
+        if (!CboDb.instance) {
+            CboDb.instance=new CboDb(CBODB_FN);
+        }
+        return CboDb.instance;
+    }
+}
+
+
+export class FileRenamerDb extends Db {
+    static get():FileRenamerDb {
+        if (!FileRenamerDb.instance) {
+            FileRenamerDb.instance=new FileRenamerDb(FILE_RENAMER_FN);
+        }
+        return FileRenamerDb.instance;
+    }
+}

@@ -5,6 +5,8 @@ import { reverse } from 'dns';
 import cors, { CorsOptions } from "cors";
 import { DirEntity }  from './fs';
 
+import {file_router}  from './routes/file-renamer';
+
 const port = 3000;
 const db = CboDb.get();
 var app = express();
@@ -199,7 +201,7 @@ router.post('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) =
 });
 
 app.use('/api',router);
-
+app.use('/file-renamer',file_router);
 
 /*app.use(function(req, res, next) {
   require('./crud')(req, res, next);
