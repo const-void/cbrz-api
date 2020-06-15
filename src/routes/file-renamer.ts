@@ -22,4 +22,51 @@ file_router.get('/r/:table', (req:Request, res:Response, next:NextFunction) => {
       res.json(rows);
     });
 });
+
+file_router.post('/i/:table', (req:Request, res:Response, next:NextFunction) => {
+  var rv = { orig_params:req.params, orig_body:req.body } ;
+ 
+  //https://www.sqlite.org/lang_transaction.html
+  //https://github.com/mapbox/node-sqlite3/wiki/Control-Flow
+  //
+  //create an insert sql--interrogate body parameters, use key:value where key = field name, value = field value
+  var col_names=Object.keys(req.body);
+  var values=Array(col_names.length).fill('?').toString()
+  var cols=col_names.toString();
+  var vals=Object.values(req.body);
+  var insert_sql=`INSERT INTO ${req.params.table} (${cols}) VALUES (${values})`;
+  console.log(insert_sql);
+  db.db.run(insert_sql,vals,function(this,err){
+    if (err) { console.log(err); res.json(err); }
+    res.json(rv);
+  });      
   
+});
+
+ //todo - make this a transaction...somehow!!!
+ //also...what about using the body for the delete?
+ file_router.delete('/d/:table', (req:Request, res:Response, next:NextFunction) => {
+  var rv = { orig_params:req.params, orig_body:req.body } ;
+ 
+    var sql=`delete from ${req.params.table} where `;
+    var first_flag=true;
+    for (let col_name of Object.keys(req.body)) {
+      if (first_flag) {
+        first_flag=false;
+      }
+      else {
+        sql+=",";
+      }
+      sql+=`${col_name}=?`
+    }
+    var vals=Object.values(req.body);
+    console.log(sql);
+    db.db.run(sql,vals,function (this,err){
+      if (err) { console.log(err); res.json(err); }
+      console.log('success!');
+      res.json(rv);
+    });
+
+});
+
+
