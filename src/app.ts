@@ -7,7 +7,7 @@ import {file_router}  from './routes/file-renamer';
 const port = 3000;
 var app = express();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({extended:true}));
 
 app.use('/api',cbo_router);

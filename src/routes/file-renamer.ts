@@ -2,16 +2,48 @@ import express, { NextFunction, Router, Request, Response } from 'express';
 import {appCors} from './app-cors';
 export var file_router = Router();
 import { DirEntity }  from '../fs';
+import { LocalFiles } from '../interfaces/local-files';
 import {FileRenamerDb} from '../db';
+import { renameSync } from 'fs';
 
 const db = FileRenamerDb.get();
 
 file_router.use(appCors);
+
 file_router.get('/list-files',(req:Request, res:Response, next:NextFunction)=>{
     let d =new DirEntity('/Local/Downloads', true, 1,1);
     res.json(d);
   });
 
+file_router.post('/rename-files', (req:Request, res:Response, next:NextFunction) => {
+    var rv = { orig_params:req.params, orig_body:req.body } ;
+    let f:LocalFiles=req.body;
+    let leading_spaces:string="";
+    let src:string="";
+    let tgt:string="";
+
+    console.log(`Processing ${f.fn}`);
+    for (let itm of f.itms) {
+      leading_spaces="  ".repeat(itm.depth);
+      if (itm.isDir) {
+        //console.log(`SKIP ${leading_spaces}${itm.basename}\\`);
+      }
+      else {     
+        if (itm.isDestDifferent) {
+          src=`${itm.parentFolder}/${itm.basename}${itm.ext}`;
+          tgt=`${itm.parentFolder}/${itm.dest_basename}${itm.dest_ext}`;
+          
+          console.log(`[${src}] => [${tgt}]`);
+          renameSync(src,tgt);
+        }
+        else {
+          //console.log(`SKIP ${leading_spaces}${itm.basename}${itm.ext}`);
+          
+        }
+      }
+    }
+    res.json(rv);
+});
 
 file_router.get('/r/:table', (req:Request, res:Response, next:NextFunction) => {
     var sql=`SELECT * FROM ${req.params.table}`
