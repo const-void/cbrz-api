@@ -5,13 +5,14 @@ import { DirEntity }  from '../fs';
 import { LocalFiles } from '../interfaces/local-files';
 import {FileRenamerDb} from '../db';
 import { renameSync } from 'fs';
+import { cfg, CFG } from '../modules/settings';
 
 const db = FileRenamerDb.get();
 
 file_router.use(appCors);
 
 file_router.get('/list-files',(req:Request, res:Response, next:NextFunction)=>{
-    let d =new DirEntity('/Local/Downloads', true, 1,1);
+    let d =new DirEntity(cfg(CFG.RENAME_PATH), true, 1,1);
     res.json(d);
   });
 

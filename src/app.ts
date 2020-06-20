@@ -3,6 +3,10 @@ import bodyParser from 'body-parser';
 
 import {cbo_router} from './routes/cbo';  //via /api 
 import {file_router}  from './routes/file-renamer'; 
+import { FileRenamerSettings } from './modules/settings';
+
+
+let cfg=FileRenamerSettings.inst();
 
 const port = 3000;
 var app = express();

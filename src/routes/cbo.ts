@@ -9,7 +9,7 @@ const db = CboDb.get();
 cbo_router.use(appCors);
 
 cbo_router.get('/files',(req:Request, res:Response, next:NextFunction)=>{
-    let d =new DirEntity('/Local/Downloads/Kabuki (1994 - 2000, David Mack)', true, 1,1);
+    let d =new DirEntity('/Local/Downloads', true, 1,1);
     res.json(d);
   });
   
