@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 
 import {cbo_router} from './routes/cbo';  //via /api 
 import {file_router}  from './routes/file-renamer'; 
+import {file_mover} from   './routes/file-mover';
 import { FileRenamerSettings } from './modules/settings';
 
 
@@ -16,6 +17,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 
 app.use('/api',cbo_router);
 app.use('/file-renamer',file_router);
+app.use('/file-mover',file_mover);
 
 app.get('/', (req, res) => {
   res.send('The sedulous hyena ate the antelope!');

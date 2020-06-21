@@ -6,6 +6,8 @@ import fs, { Dirent, readSync } from 'fs';
 // dir walk classes /////
 
 //directory class does most of the  heavy lifting
+
+//refactor params into an interface!! way too 
 export class DirEntity {
   icon:string;
   ext:string;
@@ -14,7 +16,7 @@ export class DirEntity {
   itms:DirEntity[]; 
   
   ///TODO - shift icons into configuration somehow
-  constructor(public fn:string, public isDir:boolean, public depth:number, public id:number){
+  constructor(public fn:string, public isDir:boolean, public depth:number, public id:number, dirOnly:boolean=false, exts:string[]=[]){
     this.itms=[];
     if (isDir) {
       this.icon="folder";
@@ -22,18 +24,26 @@ export class DirEntity {
       this.basename=path.basename(fn);
       this.parentFolder="";
       if (id==1) {
-        this.walkDir(id,depth,fn);
+        this.walkDir(id,depth,fn,dirOnly,exts);
       }
     }
     else {
-      this.icon="book";
-      this.ext=path.extname(fn);
-      this.basename=path.basename(fn,this.ext);
-      this.parentFolder=path.dirname(fn);
+      if (!dirOnly) {
+        this.icon="book";
+        this.ext=path.extname(fn);
+        this.basename=path.basename(fn,this.ext);
+        this.parentFolder=path.dirname(fn);
+      }
+      else {
+        this.icon="";
+        this.ext="";
+        this.basename="";
+        this.parentFolder="";
+      }
     }
   }
 
-  walkDir(id:number, depth:number, fn:string) {
+  walkDir(id:number, depth:number, fn:string, dirOnly: boolean,exts:string[]) {
       //console.log(`${id} - walking ${fn}`);
       let files=fs.readdirSync(fn, {withFileTypes:true});
 
@@ -43,11 +53,11 @@ export class DirEntity {
         files.forEach((d:Dirent)=>{
           id++;
           if (d.isDirectory()) {
-            this.add(new DirEntity(`${fn}/${d.name}`,true, depth+1, id));
-            id=this.walkDir(id,depth+1,`${fn}/${d.name}`);
+            this.add(new DirEntity(`${fn}/${d.name}`,true, depth+1, id,dirOnly,exts),dirOnly, exts);
+            id=this.walkDir(id,depth+1,`${fn}/${d.name}`,dirOnly,exts);
           }
           else {
-            this.add(new DirEntity(`${fn}/${d.name}`,false, depth+1, id));
+              this.add(new DirEntity(`${fn}/${d.name}`,false, depth+1, id,dirOnly,exts),dirOnly, exts);
           }    
         });
       }
@@ -55,7 +65,22 @@ export class DirEntity {
   }
   
 
-  add(itm:DirEntity) { 
-    this.itms.push(itm);
+  add(itm:DirEntity, dirOnly:boolean,  exts:string[]) { 
+    if (dirOnly) {
+      if (itm.isDir) {
+        this.itms.push(itm);  
+      }
+    }
+    else {
+      if ( itm.isDir ||  //Always add Directories 
+        ( //File  
+          (exts.length==0) || //*
+          (exts.includes(itm.ext))  
+        )
+      ) {     
+        this.itms.push(itm);
+      }      
+    }
+
   }
 };
