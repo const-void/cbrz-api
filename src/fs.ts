@@ -22,7 +22,7 @@ export class DirEntity {
       this.icon="folder";
       this.ext="";
       this.basename=path.basename(fn);
-      this.parentFolder="";
+      this.parentFolder=path.dirname(fn);
       if (id==1) {
         this.walkDir(id,depth,fn,dirOnly,exts);
       }
