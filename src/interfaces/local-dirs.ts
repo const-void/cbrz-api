@@ -6,3 +6,11 @@ export interface RenameDir {
 export interface MkDir {
     newPath: string;
 }
+
+export interface DirRename {
+    parentFolder:string;
+    origName:string;
+    newName:string;
+}
+
+

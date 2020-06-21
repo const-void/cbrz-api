@@ -3,10 +3,11 @@ import {appCors} from './app-cors';
 export var file_mover = Router();
 import { DirEntity }  from '../fs';
 import { LocalFiles } from '../interfaces/local-files';
-import { MkDir, RenameDir } from '../interfaces/local-dirs';
+import { MkDir, RenameDir, DirRename } from '../interfaces/local-dirs';
 import {FileRenamerDb} from '../db';
 import { renameSync, mkdirSync } from 'fs';
 import { cfg,CFG } from '../modules/settings';
+import {join} from 'path';
 
 const db = FileRenamerDb.get();
 
@@ -31,11 +32,15 @@ file_mover.get('/list/:path',(req:Request, res:Response, next:NextFunction)=>{
   });
 
   file_mover.post('/rename-dir', (req:Request, res:Response, next:NextFunction) => {
-    var rv = { orig_params:req.params, orig_body:req.body } ;
-    let f:RenameDir=req.body;
-    console.log(`RENAME [${f.origPath}] => [${f.newPath}]`);
-    renameSync(f.origPath,f.newPath);
-    res.json(rv);
+    var rv = { orig_params:req.params, orig_body:req.body, results: { origPath: "", newPath: ""} } ;
+    let f:DirRename=req.body;
+
+    //create a return packet
+    rv.results.origPath=join(f.parentFolder,f.origName);
+    rv.results.newPath=join(f.parentFolder,f.newName);
+    console.log(`RENAME [${rv.results.origPath}] => [${rv.results.newPath}]`);
+    renameSync(rv.results.origPath,rv.results.newPath);
+    res.json(rv.results);
 });
 
 file_mover.post('/mk-dir', (req:Request, res:Response, next:NextFunction) => {
