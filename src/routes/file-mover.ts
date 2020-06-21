@@ -2,12 +2,13 @@ import express, { NextFunction, Router, Request, Response } from 'express';
 import {appCors} from './app-cors';
 export var file_mover = Router();
 import { DirEntity }  from '../fs';
-import { LocalFiles } from '../interfaces/local-files';
+import { LocalFiles, FileMove } from '../interfaces/local-files';
 import { MkDir, RenameDir, DirRename } from '../interfaces/local-dirs';
 import {FileRenamerDb} from '../db';
 import { renameSync, mkdirSync } from 'fs';
 import { cfg,CFG } from '../modules/settings';
 import {join} from 'path';
+import {sync} from 'move-file';
 
 const db = FileRenamerDb.get();
 
@@ -50,3 +51,21 @@ file_mover.post('/mk-dir', (req:Request, res:Response, next:NextFunction) => {
     mkdirSync(f.newPath);
     res.json(rv);
 });
+
+file_mover.post('/mv-files', (req:Request, res:Response, next:NextFunction) => {
+    var rv = { orig_params:req.params, orig_body:req.body } ;
+    let opts:FileMove=req.body;
+    let srcPath:string="";
+    let destPath:string="";
+
+    for(let i of  opts.itms) {
+        if (i.src) {
+            srcPath=join(i.fn);
+            destPath=join(opts.destPath,`${i.basename}${i.ext}`);
+            sync(srcPath,destPath);
+            console.log(`${srcPath}=>${destPath}`);
+        }
+    }
+    res.json(rv);
+});
+
