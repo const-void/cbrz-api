@@ -3,6 +3,8 @@ npm run dev ... nodemon will keep the app running.
 
 the cbo_id table is an index of cbo_ids to table
 
+cbo_name is a FTS5 table that should have all the searchable text.  I probably should rename the text field from name to something else.  Later???
+
 
 todos:
 * transactions!!!

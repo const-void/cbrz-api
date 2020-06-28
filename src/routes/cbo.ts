@@ -7,6 +7,9 @@ import { join } from 'path';
 
 const db = CboDb.get();
 
+//list of tables that will not have name_enUS cloned into cbo_name ... could be table driven? TODO
+const noCboName=['cbo_name','cbo_comic','cbo_i18n','cbo_id','cbo_version']
+
 cbo_router.use(appCors);
 
 cbo_router.get('/files',(req:Request, res:Response, next:NextFunction)=>{
@@ -25,10 +28,11 @@ cbo_router.get('/j/publisher/:publisher_id/:t1_nm/:t1_id?/:t2_nm?/:t2_id?/:t3_nm
   } 
   let join_select:string=`${req.params.t1_nm}.name_enUS`;
 
+  //look for optional secondary table joins
   if  (req.params.t2_nm!=undefined)  {
     join_tbl=`${join_tbl}_${req.params.t2_nm}`;
     join_select=`${req.params.t2_nm}.name_enUS`;
-
+ 
   }
   
   if (req.params.t2_id!=undefined)  {
@@ -43,7 +47,8 @@ cbo_router.get('/j/publisher/:publisher_id/:t1_nm/:t1_id?/:t2_nm?/:t2_id?/:t3_nm
   if (req.params.t3_id!=undefined)  {
     join_where=`${join_where} and ${req.params.t3_nm}_id=${req.params.t3_id}`;
   }
-  
+
+  //execute
   let sql=`SELECT ${join_select} FROM ${join_tbl} WHERE ${join_where}`
   console.log(`read ${join_tbl}`);
 
@@ -53,6 +58,8 @@ cbo_router.get('/j/publisher/:publisher_id/:t1_nm/:t1_id?/:t2_nm?/:t2_id?/:t3_nm
   });
 });
 
+
+//insert
 cbo_router.post('/j/publisher/:publisher_id/:t1_nm/:t1_id/:t2_nm?/:t2_id?/:t3_nm?/:t3_id?', (req:Request, res:Response, next:NextFunction) => {
   let data:string[]=[req.params.publisher_id, req.params.t1_id];
   let cols:string=`publisher_id,${req.params.t1_nm}_id`;
@@ -124,6 +131,25 @@ cbo_router.post('/j/publisher/:publisher_id/:t1_nm/:t1_id/:t2_nm?/:t2_id?/:t3_nm
     });
   });
   
+ // /cboid/id
+ cbo_router.get('/search/:txt', (req:Request, res:Response, next:NextFunction) => {
+  var sql="SELECT tbl FROM cbo_id WHERE id=?";
+ console.log(`inspecting cboid ${req.params.id}`);
+
+  db.db.all(sql,[req.params.id],(err,rows)=>{
+    if (err) { throw err}
+    if (rows.length>0) {
+      var sql2=`SELECT * from ${rows[0].tbl} where id=?`;
+      db.db.all(sql2,[req.params.id],(err2,rows2)=>{
+        if (err2) { throw err2}
+        rows2[0].table=rows[0].tbl;
+        res.json(rows2[0]);
+      });
+    }
+  });
+});
+
+
   // -> look up table, id 
   
   cbo_router.get('/crud/:table', (req:Request, res:Response, next:NextFunction) => {
@@ -157,6 +183,13 @@ cbo_router.post('/j/publisher/:publisher_id/:t1_nm/:t1_id/:t2_nm?/:t2_id?/:t3_nm
     console.log('no / null id in json body--create')
     //create an insert sql--interrogate body parameters
     var col_names=Object.keys(req.body);
+    let hasName:boolean=false;
+    let name_enUS:string;  //todo - i18n is going to be gnarly
+    if (!noCboName.includes(req.params.table)) {
+      hasName=true;
+      name_enUS=req.body.name_enUS;
+    }
+    
     col_names.push('id');
     var values=Array(col_names.length).fill('?').toString()
     var cols=col_names.toString();
@@ -172,7 +205,15 @@ cbo_router.post('/j/publisher/:publisher_id/:t1_nm/:t1_id/:t2_nm?/:t2_id?/:t3_nm
       console.log(`created cboid ${this.lastID}`);
       db.db.run(insert_sql,vals,function(this,err){
         if (err) { console.log(err); res.json(err); }
-        res.json(rv);
+        if (hasName) {
+          db.db.run('INSERT INTO cbo_name (cbo_id,name_enUS) VALUES (?,?)',[rv.id,name_enUS], function(this,err) {
+            if (err) { console.log(err); res.json(err); } 
+            res.json(rv);
+          });
+        }
+        else {
+          res.json(rv);
+        }
       });      
     });
   });
@@ -198,55 +239,82 @@ cbo_router.post('/j/publisher/:publisher_id/:t1_nm/:t1_id/:t2_nm?/:t2_id?/:t3_nm
     vals.push(req.params.id);
    
     console.log(sql);
+    let hasName:boolean=false;
+    let name_enUS:string;  //todo - i18n is going to be gnarly
+    if (!noCboName.includes(req.params.table)) {
+      hasName=true;
+      name_enUS=req.body.name_enUS;
+      console.log(`new name_enUS = ${name_enUS}`);
+    }
   
     db.db.run(sql,vals, function (this,err){
       if (err) { console.log(err); res.json(err); }
-   
-      let cboid_sql="UPDATE cbo_id SET modified_ts=? where id=?";
+      console.log(`Row(s) updated: ${this.changes}`);
+
+      let cboid_sql="UPDATE cbo_id SET modified_ts=? WHERE id=?";
       let ts=Date.now();
+      let cboi_id=req.params.id;
+
+      console.log(cboid_sql);
       db.db.run(cboid_sql,[ts,req.params.id],function (this,err) {
+        console.log(`Row(s) updated: ${this.changes}`);
+
         if (err) { console.log(err); res.json(err); }
-        res.json(rv);    
+        if (hasName) {
+          let cboname_sql=`UPDATE cbo_name SET name_enUS='${name_enUS}' WHERE cbo_id=${cboi_id}`;
+          console.log(cboname_sql);
+          db.db.run(cboname_sql,[], function(this,err) {
+            if (err) { console.log(err); res.json(err); } 
+            console.log(`Row(s) updated: ${this.changes} for ${cboi_id}`);
+
+            res.json(rv);
+          });
+        }
+        else {
+          res.json(rv);
+        }
       });   
     });
   });
   
-  //delete - delete from source table first, then from cboid table nextr
+  //delete - delete from source table first, then from cboid table next, then cbo_name last
   //todo - make this a transaction...somehow!!!
   cbo_router.delete('/crud/:id', (req:Request, res:Response, next:NextFunction) => {
     var rv = { orig_params:req.params, orig_body:req.body, id: req.params.id } ;
-   
     var sql=`select tbl from cbo_id where id=${req.params.id}`;
     console.log(`get cboid table --  ${sql}`);
     db.db.get(sql,[],function (this,err,row){
       if (err) { console.log(err); res.json(err); }
       console.log(row);
+      
       var sql2=`delete from ${row.tbl} where id=${req.params.id}`;
       console.log(sql2);
+
+      let hasName:boolean=false;
+      let name_enUS:string;  //todo - i18n is going to be gnarly
+      if (!noCboName.includes(row.tbl)) {
+        hasName=true;
+      }
+
       db.db.run(sql2,[],function (this,err){
         if (err) { console.log(err); res.json(err); }
         var sql3=`delete from cbo_id where id=${req.params.id}`;
         console.log(sql3);
         db.db.run(sql3,[], function(this,err){
           if (err) { console.log(err); res.json(err); }
-          console.log('success!');
-          res.json(rv);
+          if (hasName) {
+            db.db.run(`delete from cbo_name where cbo_id=${req.params.id}`,[],function(this,err){
+              if (err) { console.log(err); res.json(err); }
+              console.log('success!');
+              res.json(rv);  
+            });
+          }
+          else {
+            console.log('success!');
+            res.json(rv);
+          }
         });
       });
   
-    });
-  });
-  
-  
-  //update
-  cbo_router.post('/crud/:table/:id', (req:Request, res:Response, next:NextFunction) => {
-    //some sort of table<->id validator here
-  
-    var sql=`SELECT * FROM ${req.params.table} where id=?`
-    console.log(`read ${req.params.table} (${req.params.id})`);
-  
-    db.db.all(sql,[req.params.id],(err,rows)=>{
-      if (err) { throw err}
-      res.json(rows[0]);
     });
   });

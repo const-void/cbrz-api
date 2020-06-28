@@ -1,0 +1,1 @@
+CREATE VIRTUAL TABLE cbo_name USING fts5(cbo_id, name_enUS);
