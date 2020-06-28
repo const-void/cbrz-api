@@ -4,7 +4,7 @@ export interface RenameDir {
 }
 
 export interface MkDir {
-    newPath: string;
+    newPath: string; 
 }
 
 export interface DirRename {

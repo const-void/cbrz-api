@@ -3,6 +3,7 @@ import {appCors} from './app-cors';
 export var cbo_router = Router();
 import { DirEntity }  from '../fs';
 import { CboDb } from '../db';
+import { join } from 'path';
 
 const db = CboDb.get();
 
@@ -13,6 +14,75 @@ cbo_router.get('/files',(req:Request, res:Response, next:NextFunction)=>{
     res.json(d);
   });
   
+//join////////////////////////////////////////////////////
+
+//read
+cbo_router.get('/j/publisher/:publisher_id/:t1_nm/:t1_id?/:t2_nm?/:t2_id?/:t3_nm?/:t3_id?',(req:Request, res:Response, next:NextFunction)=>{
+  let join_tbl:string=`cbo_publisher_${req.params.t1_nm}`;
+  let join_where:string=`where publisher_id=${req.params.publisher_id}`;
+  if (req.params.t1_id!=undefined) {
+    join_where=`${join_where} and ${req.params.t1_nm}_id=${req.params.t1_id}`;
+  } 
+  let join_select:string=`${req.params.t1_nm}.name_enUS`;
+
+  if  (req.params.t2_nm!=undefined)  {
+    join_tbl=`${join_tbl}_${req.params.t2_nm}`;
+    join_select=`${req.params.t2_nm}.name_enUS`;
+
+  }
+  
+  if (req.params.t2_id!=undefined)  {
+    join_where=`${join_where} and ${req.params.t2_nm}_id=${req.params.t2_id}`;
+  }
+  
+  if  (req.params.t3_nm!=undefined)  {
+    join_tbl=`${join_tbl}_${req.params.t3_nm}`;
+    join_select=`${req.params.t3_nm}.name_enUS`;
+  }
+
+  if (req.params.t3_id!=undefined)  {
+    join_where=`${join_where} and ${req.params.t3_nm}_id=${req.params.t3_id}`;
+  }
+  
+  let sql=`SELECT ${join_select} FROM ${join_tbl} WHERE ${join_where}`
+  console.log(`read ${join_tbl}`);
+
+  db.db.all(sql,[],(err,rows)=>{
+    if (err) { throw err}
+    res.json(rows);
+  });
+});
+
+cbo_router.post('/j/publisher/:publisher_id/:t1_nm/:t1_id/:t2_nm?/:t2_id?/:t3_nm?/:t3_id?', (req:Request, res:Response, next:NextFunction) => {
+  let data:string[]=[req.params.publisher_id, req.params.t1_id];
+  let cols:string=`publisher_id,${req.params.t1_nm}_id`;
+  let vals:string='?,?';
+  let tbl:string=`cbo_publisher_${req.params.t1_nm}`;
+
+  if ( (req.params.t2_nm!=undefined) && (req.params.t2_id!=undefined) ) {
+    tbl=`${tbl}_${req.params.t2_nm}`;
+    cols=`${cols},${req.params.t2_nm}_id`;
+    vals='?,?,?';
+    data.push(req.params.t2_id);
+  }
+
+  if ( (req.params.t3_nm!=undefined) && (req.params.t3_id!=undefined) ) {
+    tbl=`${tbl}_${req.params.t3_nm}`;
+    cols=`${cols},${req.params.t3_nm}_id`;
+    vals='?,?,?,?';
+    data.push(req.params.t3_id);
+  }
+
+  console.log(`insert ${tbl}`);
+  db.db.run(`INSERT INTO ${tbl} (${cols}) VALUES (${vals})`,data, function (this,err){
+    if (err) { console.log(err); res.json(err); }
+    res.json(this.lastID);      
+  });
+
+});
+
+// table schema ///////////////////////////////////////////////////////////
+
   //inspect should be part of a load process that caches tables into memory
   //there should be a refresh command that rereshes the cache
   cbo_router.get('/inspect', (req:Request, res:Response, next:NextFunction) => {
@@ -34,6 +104,8 @@ cbo_router.get('/files',(req:Request, res:Response, next:NextFunction)=>{
     });
   });
   
+// Table CRUD /////////////////////////////////////////////////////////////////
+
   // /cboid/id
   cbo_router.get('/cbo/:id', (req:Request, res:Response, next:NextFunction) => {
     var sql="SELECT tbl FROM cbo_id WHERE id=?";
