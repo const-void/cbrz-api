@@ -6,7 +6,7 @@ import {file_router}  from './routes/file-renamer';
 import {file_mover} from   './routes/file-mover';
 import { FileRenamerSettings } from './modules/settings';
 
-
+//paths are managed in settings db
 let cfg=FileRenamerSettings.inst();
 
 const port = 3000;

@@ -133,19 +133,12 @@ cbo_router.post('/j/publisher/:publisher_id/:t1_nm/:t1_id/:t2_nm?/:t2_id?/:t3_nm
   
  // /cboid/id
  cbo_router.get('/search/:txt', (req:Request, res:Response, next:NextFunction) => {
-  var sql="SELECT tbl FROM cbo_id WHERE id=?";
- console.log(`inspecting cboid ${req.params.id}`);
+  var sql=`SELECT * FROM v_cbo_txt WHERE name_enUS MATCH '${req.params.txt}*'`;
+  console.log(`searching for ${sql}`);
 
-  db.db.all(sql,[req.params.id],(err,rows)=>{
+  db.db.all(sql,(err,rows)=>{
     if (err) { throw err}
-    if (rows.length>0) {
-      var sql2=`SELECT * from ${rows[0].tbl} where id=?`;
-      db.db.all(sql2,[req.params.id],(err2,rows2)=>{
-        if (err2) { throw err2}
-        rows2[0].table=rows[0].tbl;
-        res.json(rows2[0]);
-      });
-    }
+    res.json(rows);
   });
 });
 
