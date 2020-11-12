@@ -4,13 +4,13 @@ export var file_mover = Router();
 import { DirEntity } from '../fs';
 import { LocalFiles, FileMove } from '../interfaces/local-files';
 import { MkDir, RenameDir, DirRename } from '../interfaces/local-dirs';
-import { FileRenamerDb } from '../db';
+import { CbrzDb } from '../db';
 import { renameSync, mkdirSync } from 'fs';
 import { cfg, CFG } from '../modules/settings';
 import { join } from 'path';
 import { sync } from 'move-file';
 
-const db = FileRenamerDb.get();
+const db = CbrzDb.get();
 
 file_mover.use(appCors);
 
