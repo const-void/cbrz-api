@@ -9,14 +9,16 @@ import { ComicPage } from '../interfaces/comic-image';
 
 comic_router.use(appCors);
 
-comic_router.get('/get-page-len', (req: Request, res: Response, next: NextFunction) => {
+comic_router.post('/get-page-len', (req: Request, res: Response, next: NextFunction) => {
     var rv = { orig_params: req.params, orig_body: req.body, results: { page_count: "" } };
+    //console.log(req.body);
     let f: LocalFiles = req.body;
+    console.log(`getting page length of ${f.basename}`);
     let c: ComicFile = loadComic(f);
     res.json(c.getPageCount());
 });
 
-comic_router.get('/get-page/:pageNum', (req: Request, res: Response, next: NextFunction) => {
+comic_router.post('/get-page/:pageNum', (req: Request, res: Response, next: NextFunction) => {
     var rv = { orig_params: req.params, orig_body: req.body };
     let f: LocalFiles = req.body;
     let n: number = +req.params.pageNum;

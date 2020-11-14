@@ -13,9 +13,12 @@ export enum COMIC_FILE_TYPE {
 function get_comic_type(f: LocalFiles): COMIC_FILE_TYPE {
     let ext: string = f.ext.toLowerCase();
     switch (ext) {
-        case 'cbz': return COMIC_FILE_TYPE.CBZ;
-        case 'cbr': return COMIC_FILE_TYPE.CBZ;
-        case 'pdf': return COMIC_FILE_TYPE.PDF;
+        case 'cbz':
+        case '.cbz': return COMIC_FILE_TYPE.CBZ;
+        case 'cbr':
+        case '.cbr': return COMIC_FILE_TYPE.CBZ;
+        case 'pdf':
+        case '.pdf': return COMIC_FILE_TYPE.PDF;
     }
     return COMIC_FILE_TYPE.UNKNOWN;
 }
