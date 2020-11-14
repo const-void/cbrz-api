@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 
 import { file_router } from './routes/file-renamer';
 import { file_mover } from './routes/file-mover';
+import { comic_router } from './routes/comic-parser';
 import { CbrzSettings } from './modules/settings';
 
 //paths are managed in settings db
@@ -16,6 +17,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/file-renamer', file_router);
 app.use('/file-mover', file_mover);
+app.use('/comic-parser', comic_router);
+
 
 app.get('/', (req, res) => {
   res.send('The sedulous hyena ate the antelope!');
