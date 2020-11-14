@@ -21,11 +21,16 @@ comic_router.get('/get-page/:pageNum', (req: Request, res: Response, next: NextF
     let f: LocalFiles = req.body;
     let n: number = +req.params.pageNum;
     let c: ComicFile = loadComic(f);
-    let p: ComicPage = c.getPage(n);
+    c.getPage(n).then((p) => {
+        //https://github.com/expressjs/express/issues/732
+        //http://expressjs.com/en/api.html#res.set
+        res.set('content-type', p.mimeType);
+        res.set("content-disposition", "inline");
+        //console.log(res.getHeaders());
+        res.send(p.b);
+        //res.end(p.b, 'binary');
+    });
 
-    //https://github.com/expressjs/express/issues/732
-    res.contentType(p.mimeType);
-    res.end(p.b, 'binary');
 
 });
 

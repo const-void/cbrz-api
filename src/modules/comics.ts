@@ -23,7 +23,7 @@ function get_comic_type(f: LocalFiles): COMIC_FILE_TYPE {
 export abstract class ComicFile {
     constructor(public f: LocalFiles, public comicType: COMIC_FILE_TYPE) { }
     abstract getPageCount(): number;
-    abstract getPage(n: number): ComicPage;
+    abstract getPage(n: number): Promise<ComicPage>;
 }
 
 export class ComicFileCBZ extends ComicFile {
@@ -38,17 +38,23 @@ export class ComicFileCBZ extends ComicFile {
         this.z = new AdmZip(this.f.fn);
         console.log(`Loaded ${this.f.fn}`);
         this.e = this.z.getEntries(); //includes directories....i guess???
+    }
 
+    orderPages() {
+        this.e = this.e.sort((a, b) => (a.name > b.name) ? 1 : -1);
     }
 
     getPageCount(): number {
         console.log(`Page count: ${this.e.length}`);
-        return this.e.length;
+        let max: number = 0;
+        this.e.forEach((p) => { if (!p.isDirectory) { max++; } });
+        return max;
     }
 
-    getPage(n: number): ComicPage {
+    async getPage(n: number): Promise<ComicPage> {
         let c: ComicPage = defaultComicPage();
         c.pageNum = n - 1;
+        this.orderPages();
         let p: AdmZip.IZipEntry = this.e[c.pageNum];
         while (p.isDirectory) {
             p = this.e[c.pageNum++];
@@ -57,14 +63,14 @@ export class ComicFileCBZ extends ComicFile {
         c.b = p.getData();
         console.log(`loaded`);
         //https://github.com/sindresorhus/file-type/
-        (async () => {
-            let t = await FileType.fromBuffer(c.b);
-            if (t) {
-                c.ext = t.ext;
-                c.mimeType = t.mime;
-                console.log(`ext: ${c.ext} (${c.mimeType})`);
-            }
-        })();
+
+        let t = await FileType.fromBuffer(c.b);
+        if (t) {
+            c.ext = t.ext;
+            c.mimeType = t.mime;
+            console.log(`ext: ${c.ext} (${c.mimeType})`);
+
+        }
         return c;
     }
 }
@@ -79,8 +85,8 @@ export class ComicFileUnknown extends ComicFile {
         return 0;
     }
 
-    getPage(n: number): ComicPage {
-        return defaultComicPage();
+    getPage(n: number): Promise<ComicPage> {
+        return new Promise((resolve, reject) => { resolve(defaultComicPage()); })
     }
 }
 
