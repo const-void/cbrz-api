@@ -95,11 +95,12 @@ export class ComicFileCBR extends ComicFile {
     constructor(f: LocalFiles) {
         super(f, COMIC_FILE_TYPE.CBR);
         this.eOk = false;
-        if (ComicFileCBR.zLoaded) {
+        if ((ComicFileCBR.zLoaded) && (ComicFileCBR.zFn === f.fn)) {
             console.log(`Using cached  ${ComicFileCBR.zFn} `);
             this.eOk = true;
         }
         else {
+            ComicFileCBR.zLoaded = false;
             console.log(`Loading rar ${this.f.fn} into memory`);
             var buf = Uint8Array.from(readFileSync(this.f.fn)).buffer;
             console.log('loaded')
