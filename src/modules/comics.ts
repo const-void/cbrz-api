@@ -5,7 +5,7 @@ import FileType, { FileTypeResult } from 'file-type';
 import { ComicPage, defaultComicPage } from '../interfaces/comic-image';
 import { ArcList, Extractor, FileHeader, Result } from 'node-unrar-js/dist/js/extractor';
 import { readFileSync } from 'fs';
-
+import { GenericCache, initCache } from '../interfaces/generic/cache';
 
 export enum COMIC_FILE_TYPE {
     CBZ,
@@ -86,34 +86,34 @@ export class ComicFileCBZ extends ComicFile {
 export class ComicFileCBR extends ComicFile {
     //https://github.com/cthackers/adm-zip
 
-    static z: Extractor; //rar extractor 
-    static zFn: string = "";  //filename
-    static zLoaded: boolean = false;
+    static unrar: GenericCache<Extractor, string> = initCache<Extractor, string>({} as Extractor, "");; //string is filename
+
     eOk: boolean;
     static e: ArcList;  //pages
 
     constructor(f: LocalFiles) {
         super(f, COMIC_FILE_TYPE.CBR);
         this.eOk = false;
-        if ((ComicFileCBR.zLoaded) && (ComicFileCBR.zFn === f.fn)) {
-            console.log(`Using cached  ${ComicFileCBR.zFn} `);
+        if ((ComicFileCBR.unrar.isCached) && (ComicFileCBR.unrar.cacheIdx === f.fn)) {
+            console.log(`Using cached  ${ComicFileCBR.unrar.cacheIdx} `);
             this.eOk = true;
         }
         else {
-            ComicFileCBR.zLoaded = false;
+            ComicFileCBR.unrar = initCache<Extractor, string>({} as Extractor, "");
+
             console.log(`Loading rar ${this.f.fn} into memory`);
             var buf = Uint8Array.from(readFileSync(this.f.fn)).buffer;
             console.log('loaded')
-            ComicFileCBR.z = createExtractorFromData(buf);
+            ComicFileCBR.unrar.o = createExtractorFromData(buf);
             console.log(`Ready to process ${this.f.fn}`);
-            let rv = ComicFileCBR.z.getFileList(); //includes directories....i guess???
+            let rv = ComicFileCBR.unrar.o.getFileList(); //includes directories....i guess???
 
             if ((rv[0].state == 'SUCCESS') && (rv[1] != null)) {
                 this.eOk = true;
                 ComicFileCBR.e = rv[1];
                 this.orderPages();
-                ComicFileCBR.zFn = this.f.fn;
-                ComicFileCBR.zLoaded = true;
+                ComicFileCBR.unrar.cacheIdx = this.f.fn;
+                ComicFileCBR.unrar.isCached = true;
             }
         }
     }
@@ -139,7 +139,7 @@ export class ComicFileCBR extends ComicFile {
             p = ComicFileCBR.e.fileHeaders[c.pageNum++];
         }
         console.log(`loading page ${n} (idx ${c.pageNum}) - ${ComicFileCBR.e.fileHeaders[c.pageNum].name} ...`);
-        let rv = ComicFileCBR.z.extractFiles([ComicFileCBR.e.fileHeaders[c.pageNum].name]);
+        let rv = ComicFileCBR.unrar.o.extractFiles([ComicFileCBR.e.fileHeaders[c.pageNum].name]);
         if ((rv[0].state == 'SUCCESS') && (rv[1] != null)) {
             if (rv[1].files[0] != null) {
                 //console.log(rv[1].files[0]);
