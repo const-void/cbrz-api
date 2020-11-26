@@ -1,6 +1,6 @@
 import { Database } from 'sqlite3'
 
-const FILE_RENAMER_FN = "cbrz.db"
+const DB_FN = "cbrz.db"
 
 class Db {
     protected static instance: Db;
@@ -24,7 +24,7 @@ class Db {
 export class CbrzDb extends Db {
     static get(): CbrzDb {
         if (!CbrzDb.instance) {
-            CbrzDb.instance = new CbrzDb(FILE_RENAMER_FN);
+            CbrzDb.instance = new CbrzDb(DB_FN);
         }
         return CbrzDb.instance;
     }
