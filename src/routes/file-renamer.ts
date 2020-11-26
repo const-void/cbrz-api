@@ -1,9 +1,9 @@
 import express, { NextFunction, Router, Request, Response } from 'express';
 import { appCors } from './app-cors';
 export var file_router = Router();
-import { DirEntity } from '../fs';
+import { DirEntity } from '../modules/fs';
 import { LocalFiles } from '../interfaces/local-files';
-import { CbrzDb } from '../db';
+import { CbrzDb } from '../modules/db';
 import { renameSync } from 'fs';
 import { cfg, CFG } from '../modules/settings';
 

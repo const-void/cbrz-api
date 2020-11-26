@@ -1,10 +1,10 @@
 import express, { NextFunction, Router, Request, Response } from 'express';
 import { appCors } from './app-cors';
 export var file_mover = Router();
-import { DirEntity } from '../fs';
+import { DirEntity } from '../modules/fs';
 import { LocalFiles, FileMove } from '../interfaces/local-files';
 import { MkDir, RenameDir, DirRename } from '../interfaces/local-dirs';
-import { CbrzDb } from '../db';
+import { CbrzDb } from '../modules/db';
 import { renameSync, mkdirSync } from 'fs';
 import { cfg, CFG } from '../modules/settings';
 import { join } from 'path';
