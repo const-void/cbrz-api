@@ -5,6 +5,7 @@ interface Cfg {
     [key: string]: string;
 }
 
+// adding or removing enumerations automatically creates or removes database records
 export enum CFG {
     RENAME_PATH = "rename-path",
     FILE_MOVE_SOURCE_PATH = "file-move-source-path"
