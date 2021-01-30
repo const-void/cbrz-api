@@ -1,8 +1,25 @@
 # cb[rz]
-cb[rz] is a digital comic book file manager.  There are two desktop components, which are both intended to be run on the same computer. 
+cb[rz] is a digital comic book file manager that makes it easy to organize and rename books from Humble Bundle, groupees, fanatical etc--who have TERRIBLE and CHAOTIC filenaming approaches.  
 
-Tested on Win10, but probably would work anywhere.
-  
+There are two  components, which are both intended to be run on the same computer and present a cohesive desktop experience. 
+
+Tested on Win10 w/Chrome, but probably would work anywhere with anything.
+
+Handy features include:
+* Quickly moving a bundle of downloads to a directories of your choice
+* One-click rename that takes care of all the goofy bundle stuff, including text removal (regular expressions!) and basic formatting of issue #, volume #, etc; includes a preview so you know what you are getting into!
+* Regular expression search/replace to quickly rename groups of files.   Includes real time preview so no 'oopsies'!
+* Eazy-peazy file rename where you can set the filename to whatever you want; keeps the current extension.
+* Cover preview and one-click buttons to set the publishing year. 
+
+Typical usage:
+1. After downloading the latest humble bundle, you fire up the api and ui portions of cb[rz].  
+2. From your browser, move files out of `~\Downloads` into a `Comic` staging area, creating subdirectories for each title.
+3. Next, you fiddle with mass rename options, until you get "good" enough "one click" results: replace "_" with space, initial caps, issue/vol # sanitiation, getting rid of useless text etc.
+4. Next, do global search & replace, adding additional title details as you need.  For onsie/twosie stuff, just key in the comic's actual title.
+5. Then take a look at the first few pages of each comic so you (visually) can figure out the copyright year, since, for whatever reason, digital comic bundlers refuse to do so. 
+6.  Finally, shutdown cb[rz]; manually s/ftp or drop the comics into a finalized location - a NAS, different directory, etc.
+
 # install
 ```powershell
 > mkdir cbrz
@@ -16,10 +33,10 @@ In  parent `cbrz` folder:
 1. Create shortcut to `cbrz\cbrz-api\start_api.ps1`
 2. Create shortcut to `cbrz\cbrz-ui\start_ui.ps1`
 3. Pin both shortcuts to task bar
-4. Click "start api" shortcut to launch express/api server 
-5. Click "start ui" shortcut to launch ng serve/ui server
+4. Click `start api` shortcut to launch express/api server 
+5. Click `start ui` shortcut to launch ng serve/ui server
 
-Chrome should open automatically.
+Chrome/default browser should open automatically.
 
 # start - win10 powershell cmd-line
 ```powershell

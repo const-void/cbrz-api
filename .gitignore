@@ -1,4 +1,4 @@
 node_modules
 dist
-*.db
+cbrz.db
 cbodb_master.db
